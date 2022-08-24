@@ -1,15 +1,15 @@
 #include "asf.h"
 
-#define LED_PIO_TESTE           PIOC                 // periferico que controla o LED
+#define LED_PIO         PIOC                 // periferico que controla o LED
 // #
 #define LED_PIO_ID        ID_PIOC                 // ID do periférico PIOC (controla LED)
 #define LED_PIO_IDX       8                    // ID do LED no PIO
-#define LED_PIO_IDX_MASK_TESTE  (1 << LED_PIO_IDX)   // Mascara para CONTROLARMOS o LED
+#define LED_PIO_IDX_MASK  (1 << LED_PIO_IDX)   // Mascara para CONTROLARMOS o LED
 
-#define BUT_PIO36 PIOA
+#define BUT_PIO PIOA
 #define BUT_PIO_ID ID_PIOA
 #define BUT_PIO_IDX 10
-#define BUT_PIO36_IDX_MASK (1u << BUT_PIO_IDX) // esse já está pronto.
+#define BUT_PIO_IDX_MASK (1u << BUT_PIO_IDX) // esse já está pronto.
 
 // Configuracoes do botao OLED
 // Para encontrar os IDS DO BOTAO(PIN ON EXT CONNECTOR UTILIZAR A OLEDX1)
@@ -77,24 +77,23 @@ void init(void){
 
 	//Configura o index 8 (LED_PIO_IDX) do PIOC como sendo saída inicializada com o valor '0',
 	//sem multidrive e sem resistor de pull-up. --> Deixa o led ligado
+	pio_set_output(LED_PIO, LED_PIO_IDX_MASK, 0, 0, 0);
 	pio_set_output(LED1_PIO, LED1_PIO_IDX_MASK, 0, 0, 0);
-	pio_set_output(LED_PIO_TESTE, LED_PIO_IDX_MASK_TESTE, 0, 0, 0);
 	pio_set_output(LED2_PIO, LED2_PIO_IDX_MASK, 0, 0, 0);
 	pio_set_output(LED3_PIO, LED3_PIO_IDX_MASK, 0, 0, 0);
 
 
 	//Setar botao -> necessario input e pull_up em cada um
-	pio_set_input(BUT_PIO36, BUT_PIO36_IDX_MASK, PIO_DEFAULT);
+	pio_set_input(BUT_PIO, BUT_PIO_IDX_MASK, PIO_DEFAULT);
 	pio_set_input(BUT1_PIO, BUT1_PIO_IDX_MASK, PIO_DEFAULT);
 	pio_set_input(BUT2_PIO, BUT2_PIO_IDX_MASK, PIO_DEFAULT);
 	pio_set_input(BUT3_PIO, BUT3_PIO_IDX_MASK, PIO_DEFAULT);
-	pio_pull_up(BUT_PIO36,BUT_PIO36_IDX_MASK,1);
+	
+	pio_pull_up(BUT_PIO, BUT_PIO_IDX_MASK, 1);
 	pio_pull_up(BUT1_PIO, BUT1_PIO_IDX_MASK, 1);
 	pio_pull_up(BUT2_PIO, BUT2_PIO_IDX_MASK, 1);
 	pio_pull_up(BUT3_PIO, BUT3_PIO_IDX_MASK, 1);
-	
-	pio_configure(LED_PIO_TESTE, PIO_OUTPUT_0, LED_PIO_IDX_MASK_TESTE, PIO_DEFAULT);
-	pio_configure(BUT_PIO36, PIO_INPUT, BUT_PIO36_IDX_MASK, PIO_PULLUP);
+
 }
 
 
@@ -108,7 +107,7 @@ int main(void) {
 	init();
 	
 	//desliga led --> no init o pio_set_output não é necessario já que pretendiamos desligar a led de qualquer jeito
-	pio_set(LED_PIO_TESTE, LED_PIO_IDX_MASK_TESTE);
+	pio_set(PIOC, LED_PIO_IDX_MASK);
 	pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
 	pio_set(LED2_PIO, LED2_PIO_IDX_MASK);
 	pio_set(LED3_PIO, LED3_PIO_IDX_MASK);
@@ -118,15 +117,14 @@ int main(void) {
 	// aplicacoes embarcadas não devem sair do while(1).
 	while(1) {
 		// Verifica valor do pino que o botão está conectado
-		if (!pio_get(BUT_PIO36, PIO_INPUT, BUT_PIO36_IDX_MASK)){
+		if (!pio_get(PIOA, PIO_INPUT, BUT_PIO_IDX_MASK)){
 			for(int i=0; i<5; i++){
-				pio_set(LED_PIO_TESTE, LED_PIO_IDX_MASK_TESTE);      // Coloca 1 no pino LED -> desliga
-				delay_ms(200);                        
-				pio_clear(LED_PIO_TESTE, LED_PIO_IDX_MASK_TESTE);    // Coloca 0 no pino do LED -> liga
-				delay_ms(200);                        
+				pio_set(PIOC, LED_PIO_IDX_MASK);      // Coloca 1 no pino LED
+				delay_ms(200);                        // Delay por software de 200 ms
+				pio_clear(PIOC, LED_PIO_IDX_MASK);    // Coloca 0 no pino do LED
+				delay_ms(200);                        // Delay por software de 200 ms
 			}
 		}
-		
 		if(!pio_get(BUT1_PIO, PIO_INPUT, BUT1_PIO_IDX_MASK)){
 			for(int i = 0; i<5; i++){
 				pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
@@ -155,12 +153,10 @@ int main(void) {
 		}
 	else  {
 		// Ativa o pino LED_IDX (par apagar)
-		pio_set(LED_PIO_TESTE, LED_PIO_IDX_MASK_TESTE);
+		pio_set(LED_PIO, LED_PIO_IDX_MASK);
 		pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
 		pio_set(LED2_PIO, LED2_PIO_IDX_MASK);
 		pio_set(LED3_PIO, LED3_PIO_IDX_MASK);
-
-
 	}
 }
 
