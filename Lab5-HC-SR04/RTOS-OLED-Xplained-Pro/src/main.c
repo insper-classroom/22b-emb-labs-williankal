@@ -113,7 +113,6 @@ void screen_show(int dist) {
 			if(dist == -1){
 				gfx_mono_draw_string("Aproxime  ", 10, 10, &sysfont);			
 				}
-			
 			else {
 				char dist_str[10];
 				sprintf(dist_str, "%d cm   ", dist);
@@ -167,19 +166,15 @@ static void task_trigger(void *pvParameters) {
 
 static void echo_init(void) {
 	pio_configure(ECHO_PIO, PIO_INPUT, ECHO_PIO_PIN_MASK, 0);
-
-	// Configura interrup��o no pino referente ao botao e associa
-	// fun��o de callback caso uma interrup��o for gerada
-	// a fun��o de callback � a: but_callback()
 	pio_handler_set(ECHO_PIO,
 	ECHO_PIO_ID,
 	ECHO_PIO_PIN_MASK,
 	PIO_IT_EDGE,
 	echo_callback);
 
-	// Ativa interrup��o e limpa primeira IRQ gerada na ativacao
 	pio_enable_interrupt(ECHO_PIO, ECHO_PIO_PIN_MASK);
 	pio_get_interrupt_status(ECHO_PIO);
+	
 	NVIC_EnableIRQ(ECHO_PIO_ID);
 	NVIC_SetPriority(ECHO_PIO_ID, 4); // Prioridade 4
 }
