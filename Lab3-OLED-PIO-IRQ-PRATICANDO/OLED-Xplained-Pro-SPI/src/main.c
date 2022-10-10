@@ -106,17 +106,17 @@ void init(void){
 	pio_get_interrupt_status(BUT2_PIO);
 	pio_get_interrupt_status(BUT1_PIO);
 	pio_get_interrupt_status(BUT3_PIO);
-	  
-	  // Configura NVIC para receber interrupcoes do PIO do botao
-	  // com prioridade 4 (quanto mais próximo de 0 maior)
-	  NVIC_EnableIRQ(BUT_PIO_ID);
-	  NVIC_EnableIRQ(BUT1_PIO_ID);
-	  NVIC_EnableIRQ(BUT2_PIO_ID);
-	  NVIC_EnableIRQ(BUT3_PIO_ID);
-	  NVIC_SetPriority(BUT_PIO_ID, 4); 
-	  NVIC_SetPriority(BUT1_PIO_ID, 2);
-	  NVIC_SetPriority(BUT2_PIO_ID, 2);
-	  NVIC_SetPriority(BUT3_PIO_ID, 2);// Prioridade 4
+	
+	// Configura NVIC para receber interrupcoes do PIO do botao
+	// com prioridade 4 (quanto mais próximo de 0 maior)
+	NVIC_EnableIRQ(BUT_PIO_ID);
+	NVIC_EnableIRQ(BUT1_PIO_ID);
+	NVIC_EnableIRQ(BUT2_PIO_ID);
+	NVIC_EnableIRQ(BUT3_PIO_ID);
+	NVIC_SetPriority(BUT_PIO_ID, 4);
+	NVIC_SetPriority(BUT1_PIO_ID, 2);
+	NVIC_SetPriority(BUT2_PIO_ID, 2);
+	NVIC_SetPriority(BUT3_PIO_ID, 2);// Prioridade 4
 }
 
 void pisca_led(){
@@ -129,16 +129,16 @@ void pisca_led(){
 			gfx_mono_draw_string("+", 90,0, &sysfont);
 			delay_ms(500);
 			gfx_mono_draw_string(" ", 90,0, &sysfont);
-			but1_flag = 0;		
-	}
+			but1_flag = 0;
+		}
 		if(but3_flag){
 			t += 100;
 			gfx_mono_draw_string("-", 20,0, &sysfont);
 			delay_ms(500);
 			gfx_mono_draw_string(" ", 20,0, &sysfont);
 			but3_flag = 0;
-	}
-	
+		}
+		
 		while(but2_flag){
 			pio_clear(PIOA, LED1_PIO_IDX_MASK);
 			pio_clear(PIOC, LED2_PIO_IDX_MASK);
@@ -162,8 +162,8 @@ void pisca_led(){
 		gfx_mono_draw_string("Ms: ", 0, 1, &sysfont);
 		sprintf(str, "%d", t);
 		gfx_mono_draw_string(str, 40, 1, &sysfont);
-         sprintf(str, "%d", t);
-         gfx_mono_draw_string(str, 40, 2, &sysfont);
+		sprintf(str, "%d", t);
+		gfx_mono_draw_string(str, 40, 2, &sysfont);
 
 		pio_clear(LED_PIO, LED_PIO_IDX_MASK);
 		delay_ms(t);
@@ -180,24 +180,24 @@ int main (void)
 	sysclk_init();
 	delay_init();
 
-  // Init LED
+	// Init LED
 	gfx_mono_ssd1306_init();
 	gfx_mono_draw_string("Frequencia: ", 60, 0, &sysfont);
 
-	//sprintf(str, "%d", cnt); 
+	//sprintf(str, "%d", cnt);
 	//gfx_mono_draw_string(str, 0, 0, &sysfont);
 
-  
-  
+	
+	
 
-  /* Insert application code here, after the board has been initialized. */
+	/* Insert application code here, after the board has been initialized. */
 	while(1) {
 
-			if(but_flag){
-				pisca_led();
-				but_flag = 0;
-			}
-			
-			pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);		
+		if(but_flag){
+			pisca_led();
+			but_flag = 0;
+		}
+		
+		pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
 	}
 }

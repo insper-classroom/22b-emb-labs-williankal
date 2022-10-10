@@ -2288,11 +2288,11 @@ __STATIC_INLINE void NVIC_SetPriority(IRQn_Type IRQn, uint32_t priority)
   401556:	f883 2310 	strb.w	r2, [r3, #784]	; 0x310
   40155a:	f883 230c 	strb.w	r2, [r3, #780]	; 0x30c
   40155e:	f883 230a 	strb.w	r2, [r3, #778]	; 0x30a
-	  NVIC_EnableIRQ(BUT3_PIO_ID);
-	  NVIC_SetPriority(BUT_PIO_ID, 4); 
-	  NVIC_SetPriority(BUT1_PIO_ID, 2);
-	  NVIC_SetPriority(BUT2_PIO_ID, 2);
-	  NVIC_SetPriority(BUT3_PIO_ID, 2);// Prioridade 4
+	NVIC_EnableIRQ(BUT3_PIO_ID);
+	NVIC_SetPriority(BUT_PIO_ID, 4);
+	NVIC_SetPriority(BUT1_PIO_ID, 2);
+	NVIC_SetPriority(BUT2_PIO_ID, 2);
+	NVIC_SetPriority(BUT3_PIO_ID, 2);// Prioridade 4
 }
   401562:	b003      	add	sp, #12
   401564:	bdf0      	pop	{r4, r5, r6, r7, pc}
@@ -2331,8 +2331,8 @@ void pisca_led(){
 			delay_ms(500);
 			gfx_mono_draw_string(" ", 20,0, &sysfont);
 			but3_flag = 0;
-	}
-	
+		}
+		
 		while(but2_flag){
   4015b2:	4e6a      	ldr	r6, [pc, #424]	; (40175c <pisca_led+0x1bc>)
 			pio_clear(PIOA, LED1_PIO_IDX_MASK);
@@ -2356,7 +2356,7 @@ void pisca_led(){
   4015d0:	215a      	movs	r1, #90	; 0x5a
   4015d2:	4867      	ldr	r0, [pc, #412]	; (401770 <pisca_led+0x1d0>)
   4015d4:	47a8      	blx	r5
-			but1_flag = 0;		
+			but1_flag = 0;
   4015d6:	2200      	movs	r2, #0
   4015d8:	4b66      	ldr	r3, [pc, #408]	; (401774 <pisca_led+0x1d4>)
   4015da:	701a      	strb	r2, [r3, #0]
@@ -2385,8 +2385,8 @@ void pisca_led(){
   401600:	701a      	strb	r2, [r3, #0]
   401602:	e017      	b.n	401634 <pisca_led+0x94>
 		gfx_mono_draw_string(str, 40, 1, &sysfont);
-         sprintf(str, "%d", t);
-         gfx_mono_draw_string(str, 40, 2, &sysfont);
+		sprintf(str, "%d", t);
+		gfx_mono_draw_string(str, 40, 2, &sysfont);
 
 		pio_clear(LED_PIO, LED_PIO_IDX_MASK);
 		delay_ms(t);
@@ -2501,12 +2501,12 @@ void pisca_led(){
   4016dc:	2128      	movs	r1, #40	; 0x28
   4016de:	a808      	add	r0, sp, #32
   4016e0:	47a8      	blx	r5
-         sprintf(str, "%d", t);
+		sprintf(str, "%d", t);
   4016e2:	4652      	mov	r2, sl
   4016e4:	4649      	mov	r1, r9
   4016e6:	a808      	add	r0, sp, #32
   4016e8:	47c0      	blx	r8
-         gfx_mono_draw_string(str, 40, 2, &sysfont);
+		gfx_mono_draw_string(str, 40, 2, &sysfont);
   4016ea:	465b      	mov	r3, fp
   4016ec:	2202      	movs	r2, #2
   4016ee:	2128      	movs	r1, #40	; 0x28
@@ -2598,7 +2598,7 @@ int main (void)
   4017cc:	4798      	blx	r3
 	delay_init();
 
-  // Init LED
+	// Init LED
 	gfx_mono_ssd1306_init();
   4017ce:	4b0d      	ldr	r3, [pc, #52]	; (401804 <main+0x44>)
   4017d0:	4798      	blx	r3
@@ -2609,30 +2609,30 @@ int main (void)
   4017d8:	480c      	ldr	r0, [pc, #48]	; (40180c <main+0x4c>)
   4017da:	4c0d      	ldr	r4, [pc, #52]	; (401810 <main+0x50>)
   4017dc:	47a0      	blx	r4
-  
+	
 
-  /* Insert application code here, after the board has been initialized. */
+	/* Insert application code here, after the board has been initialized. */
 	while(1) {
 
-			if(but_flag){
+		if(but_flag){
   4017de:	4c0d      	ldr	r4, [pc, #52]	; (401814 <main+0x54>)
-				pisca_led();
+			pisca_led();
   4017e0:	4e0d      	ldr	r6, [pc, #52]	; (401818 <main+0x58>)
-				but_flag = 0;
-			}
-			
-			pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);		
+			but_flag = 0;
+		}
+		
+		pmc_sleep(SAM_PM_SMODE_SLEEP_WFI);
   4017e2:	4d0e      	ldr	r5, [pc, #56]	; (40181c <main+0x5c>)
   4017e4:	e001      	b.n	4017ea <main+0x2a>
   4017e6:	2002      	movs	r0, #2
   4017e8:	47a8      	blx	r5
-			if(but_flag){
+		if(but_flag){
   4017ea:	7823      	ldrb	r3, [r4, #0]
   4017ec:	2b00      	cmp	r3, #0
   4017ee:	d0fa      	beq.n	4017e6 <main+0x26>
-				pisca_led();
+			pisca_led();
   4017f0:	47b0      	blx	r6
-				but_flag = 0;
+			but_flag = 0;
   4017f2:	2300      	movs	r3, #0
   4017f4:	7023      	strb	r3, [r4, #0]
   4017f6:	e7f6      	b.n	4017e6 <main+0x26>
