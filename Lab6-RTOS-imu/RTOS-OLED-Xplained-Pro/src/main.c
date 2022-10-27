@@ -1,6 +1,5 @@
 #include <asf.h>
 #include "conf_board.h"
-
 #include "gfx_mono_ug_2832hsweg04.h"
 #include "gfx_mono_text.h"
 #include "sysfont.h"
@@ -30,13 +29,10 @@
 #define LED3_PIO_ID        ID_PIOB
 #define LED3_PIO_IDX       2
 #define LED3_PIO_IDX_MASK  (1 << LED3_PIO_IDX)
-// Bot�o placa
 #define BUT_PIO      PIOA
 #define BUT_PIO_ID   ID_PIOA
 #define BUT_IDX  11
 #define BUT_IDX_MASK (1 << BUT_IDX)
-
-/** RTOS  */
 #define TASK_IMU_STACK_SIZE                (1024*6/sizeof(portSTACK_TYPE))
 #define TASK_IMU_STACK_PRIORITY            (tskIDLE_PRIORITY)
 
@@ -50,8 +46,6 @@ extern void xPortSysTickHandler(void);
 // Filas
 QueueHandle_t xQueueLado;
 SemaphoreHandle_t xSemaphoreHouseDown;
-
-
 
 enum lado{ESQUERDA, FRENTE, DIREITA};
 
@@ -110,8 +104,7 @@ int8_t mcu6050_i2c_bus_read(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_dat
 
 
 
-void mcu6050_i2c_bus_init(void)
-{
+void mcu6050_i2c_bus_init(void){
 	twihs_options_t mcu6050_option;
 	pmc_enable_periph_clk(ID_TWIHS2);
 
@@ -130,9 +123,9 @@ void mcu6050_i2c_bus_init(void)
 
 
 void led_init(void){
-	pmc_enable_periph_clk(ID_PIOA);
-	pmc_enable_periph_clk(ID_PIOC);
-	pmc_enable_periph_clk(ID_PIOB);
+	pmc_enable_periph_clk(LED1_PIO_ID);
+	pmc_enable_periph_clk(LED2_PIO_ID);
+	pmc_enable_periph_clk(LED3_PIO_ID);
 
 	pio_configure(LED_PIO, PIO_OUTPUT_0, LED_IDX_MASK, PIO_DEFAULT);
 	pio_set_output(LED1_PIO, LED1_PIO_IDX_MASK, 1, 0, 0);
@@ -154,6 +147,18 @@ void pisca_led(Pio * pio , const uint32_t idx_mask , int n){
 void apaga_tela() {
 	gfx_mono_draw_filled_rect(0, 0, 120, 30, GFX_PIXEL_CLR);
 }
+
+static void task_oled(void *pvParameters) {
+	gfx_mono_ssd1306_init();
+	gfx_mono_draw_string("Exemplo RTOS", 0, 0, &sysfont);
+	gfx_mono_draw_string("oii", 0, 20, &sysfont);
+
+	for (;;)  {
+    
+
+	}
+}
+
 
 /**********************************************************sssss**************/
 /* TASKS                                                                */
@@ -178,6 +183,9 @@ static void task_house_down(void *pvParameters) {
 static void task_orientacao(void *pvParameters) {
 	led_init();
 	gfx_mono_ssd1306_init();
+	gfx_mono_draw_string("aaa", 0, 0, &sysfont);
+
+
 	int direcao;
 	for (;;)  {
 		if(xQueueReceive(xQueueLado, &(direcao), 0)){
@@ -186,7 +194,6 @@ static void task_orientacao(void *pvParameters) {
 				gfx_mono_draw_string("esquerda", 0, 0, &sysfont);
 				pio_set(LED2_PIO, LED2_PIO_IDX_MASK);
 				pio_clear(LED1_PIO, LED1_PIO_IDX_MASK);
-
 				pio_set(LED3_PIO, LED3_PIO_IDX_MASK);
 			}
 			if (direcao == FRENTE){
@@ -220,8 +227,9 @@ static void task_orientacao(void *pvParameters) {
 
 static void task_imu(void *pvParameters) {
 	mcu6050_i2c_bus_init();
-	
-	/* Inicializa Fun??o de fus?o */
+
+
+	/* Inicializa Fun  o de fus o */
 	FusionAhrs ahrs;
 	FusionAhrsInitialise(&ahrs);
 	/* buffer para recebimento de dados */
@@ -239,12 +247,17 @@ static void task_imu(void *pvParameters) {
 	float proc_gyr_x, proc_gyr_y, proc_gyr_z;
 
 
-	/* resultado da fun??o */
+	/* resultado da fun  o */
 	uint8_t rtn;
 	
-	rtn = twihs_probe(TWIHS2, MPU6050_DEFAULT_ADDRESS);
+	 rtn = twihs_probe(TWIHS2, MPU6050_DEFAULT_ADDRESS);
+	 if(rtn != TWIHS_SUCCESS){
+		 printf("[ERRO] [i2c] [probe] \n");
+		 } else {
+		 printf("[DADO] [i2c] probe OK\n" );
+	 }
 	
-	// L? registrador WHO AM I
+	// L  registrador WHO AM I
 	rtn = mcu6050_i2c_bus_read(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_WHO_AM_I, bufferRX, 1);
 	if(rtn != TWIHS_SUCCESS){
 		printf("[ERRO] [i2c] [read] \n");
@@ -254,9 +267,12 @@ static void task_imu(void *pvParameters) {
 	}
 	
 	if (bufferRX[0] == 104){
-		printf("sucesso");
+		printf("SUCESSO!");
 	}
-
+	else{
+		printf("Incorreto :(");
+	}
+	
 	// Set Clock source
 	bufferTX[0] = MPU6050_CLOCK_PLL_XGYRO;
 	rtn = mcu6050_i2c_bus_write(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_PWR_MGMT_1, bufferTX, 1);
@@ -269,14 +285,14 @@ static void task_imu(void *pvParameters) {
 	if(rtn != TWIHS_SUCCESS)
 	printf("[ERRO] [i2c] [write] \n");
 
-	// Configura range giroscopio para operar com 250 ?/s
-	bufferTX[0] = 0x00; // 250 ?/s
+	// Configura range giroscopio para operar com 250  /s
+	bufferTX[0] = 0x00; // 250  /s
 	rtn = mcu6050_i2c_bus_write(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_GYRO_CONFIG, bufferTX, 1);
 	if(rtn != TWIHS_SUCCESS)
 	printf("[ERRO] [i2c] [write] \n");
 	float valor_anterior_yaw = 0.0;
 	float roll, pitch, yaw;
-	int diracao;
+	int d;
 	while(1) {
 		// Le valor do acc X High e Low
 		mcu6050_i2c_bus_read(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_ACCEL_XOUT_H, &raw_acc_xHigh, 1);
@@ -289,10 +305,11 @@ static void task_imu(void *pvParameters) {
 		// Le valor do acc z HIGH e Low
 		mcu6050_i2c_bus_read(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_ACCEL_ZOUT_H, &raw_acc_zHigh, 1);
 		mcu6050_i2c_bus_read(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_ACCEL_ZOUT_L, &raw_acc_zLow,  1);
-		raw_gyr_x = (raw_gyr_xHigh << 8) | (raw_gyr_xLow << 0);
-		raw_gyr_y = (raw_gyr_yHigh << 8) | (raw_gyr_yLow << 0);
-		raw_gyr_z = (raw_gyr_zHigh << 8) | (raw_gyr_zLow << 0);
 
+		// Dados s o do tipo complemento de dois
+		raw_acc_x = (raw_acc_xHigh << 8) | (raw_acc_xLow << 0);
+		raw_acc_y = (raw_acc_yHigh << 8) | (raw_acc_yLow << 0);
+		raw_acc_z = (raw_acc_zHigh << 8) | (raw_acc_zLow << 0);
 
 		// Le valor do gyr X High e Low
 		mcu6050_i2c_bus_read(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_GYRO_XOUT_H, &raw_gyr_xHigh, 1);
@@ -305,12 +322,11 @@ static void task_imu(void *pvParameters) {
 		// Le valor do gyr z HIGH e Low
 		mcu6050_i2c_bus_read(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_GYRO_ZOUT_H, &raw_gyr_zHigh, 1);
 		mcu6050_i2c_bus_read(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_GYRO_ZOUT_L, &raw_gyr_zLow,  1);
-		
-		
-		raw_acc_x = (raw_acc_xHigh << 8) | (raw_acc_xLow << 0);
-		raw_acc_y = (raw_acc_yHigh << 8) | (raw_acc_yLow << 0);
-		raw_acc_z = (raw_acc_zHigh << 8) | (raw_acc_zLow << 0);
 
+		// Dados s o do tipo complemento de dois
+		raw_gyr_x = (raw_gyr_xHigh << 8) | (raw_gyr_xLow << 0);
+		raw_gyr_y = (raw_gyr_yHigh << 8) | (raw_gyr_yLow << 0);
+		raw_gyr_z = (raw_gyr_zHigh << 8) | (raw_gyr_zLow << 0);
 
 		// Dados em escala real
 		proc_acc_x = (float)raw_acc_x/16384;
@@ -321,14 +337,22 @@ static void task_imu(void *pvParameters) {
 		proc_gyr_y = (float)raw_gyr_y/131;
 		proc_gyr_z = (float)raw_gyr_z/131;
 		
+		//printf("proc_acc_x: %f \n", proc_acc_x);
+		//printf("proc_acc_y: %f \n", proc_acc_y);
+		//printf("proc_acc_z: %f \n", proc_acc_z);
+		
+		//printf("proc_gyr_x: %f \n", proc_gyr_x);
+		//printf("proc_gyr_y: %f \n", proc_gyr_y);
+		//printf("proc_gyr_z: %f \n", proc_gyr_z);
+		
 		if(sqrt(pow(proc_acc_x, 2) + pow(proc_acc_y, 2) + pow(proc_acc_z, 2)) < 0.1){
-			printf("Em Q!");
+			printf("Em Queda!!");
 			xSemaphoreGive(xSemaphoreHouseDown);
 		}
 		
 		const FusionVector gyroscope = {proc_gyr_x, proc_gyr_y, proc_gyr_z};
 		const FusionVector accelerometer = {proc_acc_x, proc_acc_y, proc_acc_z};
-		
+			
 		// Tempo entre amostras
 		float dT = 0.1;
 
@@ -342,23 +366,23 @@ static void task_imu(void *pvParameters) {
 		roll = euler.angle.roll;
 		pitch = euler.angle.pitch;
 		yaw = euler.angle.yaw;
-		int direcao;
 		
 		if ((yaw - sqrt(pow(valor_anterior_yaw, 2)) > 30) && pitch < 15){
-			direcao = ESQUERDA;
-			xQueueSend(xQueueLado, &direcao, 0);
+			printf("entro aqui no roll");
+			d = ESQUERDA;
+			xQueueSend(xQueueLado, &d, 0);
 		}
-		else if (yaw < -25 && pitch < 15){
-			direcao = DIREITA;
-			xQueueSend(xQueueLado, &direcao, 0);
+		else if (yaw < -30 && pitch < 15){
+			d = DIREITA;
+			xQueueSend(xQueueLado, &d, 0);
 		}
-		else if (roll < -25 & pitch > 30){
-			direcao = FRENTE;
-			xQueueSend(xQueueLado, &direcao, 0);
+		else if (roll < -20 && pitch > 30){
+			d = FRENTE;
+			xQueueSend(xQueueLado, &d, 0);
 		}
 		else {
-			direcao = 4;
-			xQueueSend(xQueueLado ,&direcao, 0);
+			d = 4;
+			xQueueSend(xQueueLado, &d, 0);
 		}
 		// uma amostra a cada 1ms
 		vTaskDelay(10);
@@ -408,10 +432,10 @@ int main(void) {
 
 	/* Initialize the console uart */
 	configure_console();
-
-
 	/* Create task to control oled */
-
+	if (xTaskCreate(task_oled, "oled", TASK_IMU_STACK_SIZE, NULL, TASK_IMU_STACK_PRIORITY, NULL) != pdPASS) {
+	  printf("Failed to create oled task\r\n");
+	}
 	if (xTaskCreate(task_imu, "imu", TASK_IMU_STACK_SIZE, NULL, TASK_IMU_STACK_PRIORITY, NULL) != pdPASS) {
 		printf("Failed to create oled imu\r\n");
 	}
@@ -423,8 +447,7 @@ int main(void) {
 	if (xTaskCreate(task_orientacao, "orientacao", TASK_IMU_STACK_SIZE, NULL, TASK_IMU_STACK_PRIORITY, NULL) != pdPASS) {
 		printf("Failed to create ORIENTATION\r\n");
 	}
-	
-	
+
 	// Sem?foro
 	xSemaphoreHouseDown = xSemaphoreCreateBinary();
 	if (xSemaphoreHouseDown == NULL){
@@ -443,5 +466,3 @@ int main(void) {
 	/* Will only get here if there was insufficient memory to create the idle task. */
 	return 0;
 }
-
-
