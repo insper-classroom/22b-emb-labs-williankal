@@ -29,10 +29,6 @@
 #define LED3_PIO_ID        ID_PIOB
 #define LED3_PIO_IDX       2
 #define LED3_PIO_IDX_MASK  (1 << LED3_PIO_IDX)
-#define BUT_PIO      PIOA
-#define BUT_PIO_ID   ID_PIOA
-#define BUT_IDX  11
-#define BUT_IDX_MASK (1 << BUT_IDX)
 #define TASK_IMU_STACK_SIZE                (1024*6/sizeof(portSTACK_TYPE))
 #define TASK_IMU_STACK_PRIORITY            (tskIDLE_PRIORITY)
 
@@ -182,21 +178,21 @@ static void task_house_down(void *pvParameters) {
 
 static void task_orientacao(void *pvParameters) {
 	led_init();
+
 	gfx_mono_ssd1306_init();
-	gfx_mono_draw_string("aaa", 0, 0, &sysfont);
-
-
-	int direcao;
+	gfx_mono_draw_string("aaaaaaaaaa", 0, 0, &sysfont);
+	printf("ashdsauuhuha");
+	int lado;
 	for (;;)  {
-		if(xQueueReceive(xQueueLado, &(direcao), 0)){
-			if (direcao == ESQUERDA){
+		if(xQueueReceive(xQueueLado, &(lado), 0)){
+			if (lado == ESQUERDA){
 				apaga_tela();
 				gfx_mono_draw_string("esquerda", 0, 0, &sysfont);
 				pio_set(LED2_PIO, LED2_PIO_IDX_MASK);
 				pio_clear(LED1_PIO, LED1_PIO_IDX_MASK);
 				pio_set(LED3_PIO, LED3_PIO_IDX_MASK);
 			}
-			if (direcao == FRENTE){
+			if (lado == FRENTE){
 				apaga_tela();
 				
 				gfx_mono_draw_string("frente", 0, 0, &sysfont);
@@ -204,7 +200,7 @@ static void task_orientacao(void *pvParameters) {
 				pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
 				pio_set(LED3_PIO, LED3_PIO_IDX_MASK);
 			}
-			if (direcao == DIREITA){
+			if (lado == DIREITA){
 				apaga_tela();
 
 
@@ -214,7 +210,7 @@ static void task_orientacao(void *pvParameters) {
 				pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
 				pio_set(LED2_PIO, LED2_PIO_IDX_MASK);
 			}
-			if (direcao == 4){
+			if (lado == 4){
 				apaga_tela();
 				pio_set(LED3_PIO, LED3_PIO_IDX_MASK);
 				pio_set(LED1_PIO, LED1_PIO_IDX_MASK);
@@ -366,9 +362,8 @@ static void task_imu(void *pvParameters) {
 		roll = euler.angle.roll;
 		pitch = euler.angle.pitch;
 		yaw = euler.angle.yaw;
-		
+		int d;
 		if ((yaw - sqrt(pow(valor_anterior_yaw, 2)) > 30) && pitch < 15){
-			printf("entro aqui no roll");
 			d = ESQUERDA;
 			xQueueSend(xQueueLado, &d, 0);
 		}
@@ -407,18 +402,6 @@ static void configure_console(void) {
 	/* Specify that stdout should not be buffered. */
 	setbuf(stdout, NULL);
 }
-
-static void BUT_init(void) {
-	/* configura prioridae */
-	NVIC_EnableIRQ(BUT_PIO_ID);
-	NVIC_SetPriority(BUT_PIO_ID, 4);
-
-	/* conf bot?o como entrada */
-	pio_configure(BUT_PIO, PIO_INPUT, BUT_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
-	pio_set_debounce_filter(BUT_PIO, BUT_IDX_MASK, 60);
-	pio_enable_interrupt(BUT_PIO, BUT_IDX_MASK);
-}
-
 
 /************************************************************************/
 /* main                                                                 */
